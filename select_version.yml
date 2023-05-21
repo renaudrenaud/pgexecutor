@@ -1,0 +1,8 @@
+process: 1
+subject: select version hourly
+deadline: 1 second
+  
+listRequests:
+  - select now()
+  - select version()
+documentation: "https://www.postgresql.org/docs/10/static/sql-alterforeigndatawrapper.html"

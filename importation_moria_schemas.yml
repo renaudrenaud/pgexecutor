@@ -1,0 +1,23 @@
+process: 3
+subject: update morias schemas
+deadline: 2 second
+listRequests:
+  - |
+    select 'total moria fdw ' || count(1)::varchar as nb_moria_fdw
+    from fdw_get_pg_foreign_servers_info()
+    where srv_name like 'moria%'
+
+  - SELECT public.fdw_import_foreign_schemas('195.154.81.54', 'arcure_v1_client', 'moria_arcure_v1_client', '5432');
+  - SELECT public.fdw_import_foreign_schemas('195.154.81.54', 'arcure_v1_demo_aj', 'moria_arcure_v1_demo_aj', '5432');
+  - SELECT public.fdw_import_foreign_schemas('195.154.81.54', 'arcure_v1_demo_mj', 'moria_arcure_v1_demo_mj', '5432');
+  - SELECT public.fdw_import_foreign_schemas('195.154.81.54', 'arcure_v1_jr', 'moria_arcure_v1_jr', '5432');
+  - SELECT public.fdw_import_foreign_schemas('195.154.81.54', 'arcure_v1_jr-aj', 'moria_arcure_v1_jr_aj', '5432');
+  - SELECT public.fdw_import_foreign_schemas('195.154.81.54', 'arcure_v1_jr2020_old', 'moria_arcure_v1_jr2020_old', '5432');
+  - SELECT public.fdw_import_foreign_schemas('195.154.81.54', 'arcure_v1_la-flotte', 'moria_arcure_v1_la_flotte', '5432');
+
+  - |
+    select 'total moria fdw ' || count(1)::varchar as nb_moria_fdw
+    from fdw_get_pg_foreign_servers_info()
+    where srv_name like 'moria%'
+
+documentation: "https://www.postgresql.org/docs/10/static/sql-alterforeigndatawrapper.html"

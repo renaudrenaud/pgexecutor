@@ -1,0 +1,10 @@
+process: 4
+subject: select count document for all foreign schemas
+deadline: 10 minutes
+  
+listRequests:
+  - select count(1) nb_servers from fdw_get_pg_foreign_servers_info()
+  - select count(1) from {schema}.document
+  - select count(1) nb_servers from fdw_get_pg_foreign_servers_info()
+  
+documentation: "https://www.postgresql.org/docs/10/static/sql-alterforeigndatawrapper.html"

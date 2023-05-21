@@ -1,0 +1,10 @@
+process: 2
+subject: update all foreign schemas
+deadline: 1 minute
+
+listRequests:
+  - select count(1) nb_servers_before from fdw_get_pg_foreign_servers_info()
+  - select * from fdw_import_foreign_servers()
+  - select count(1) nb_servers_after from fdw_get_pg_foreign_servers_info()
+  
+documentation: "https://www.postgresql.org/docs/10/static/sql-alterforeigndatawrapper.html"

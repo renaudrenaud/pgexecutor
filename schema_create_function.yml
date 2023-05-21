@@ -1,0 +1,19 @@
+process: 4
+subject: create & test function for all foreign schemas
+deadline: 10 minutes
+  
+listRequests:
+  - select count(1) nb_servers from fdw_get_pg_foreign_servers_info()
+  - drop function if exists {schema}.calculer_carre(integer);
+  - |
+    CREATE OR REPLACE FUNCTION {schema}.calculer_carre(nombre integer)
+    RETURNS integer AS
+    $$
+    BEGIN
+      RETURN nombre * nombre;
+    END;
+    $$
+    LANGUAGE plpgsql;
+  - select {schema}.calculer_carre(2)
+  
+documentation: "https://www.postgresql.org/docs/10/static/sql-alterforeigndatawrapper.html"
