@@ -1,0 +1,1 @@
+* * * * * root python /home/pgexecutor/pgexecutor.py -c /home/pgexecutor/select_version.yml -d postgresql://postgres:outremer@172.17.0.1:5432/postgres >> /home/pgexporter/fichier_log.txt 2>&1
