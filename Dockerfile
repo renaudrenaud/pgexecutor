@@ -6,8 +6,8 @@ RUN apt-get update -yq \
 && apt-get install -y --no-install-recommends apt-utils \
 && apt install -yq git \
 && apt install -yq python3 \
-&& apt install -yq python3-pip
-&& apt install -yq nano
+&& apt install -yq python3-pip \
+&& apt install -yq nano \
 && apt-get -y install cron
 
 # RUN crontab - l { crontab -l; echo "*/10 * * * * python /home/pgexecutor/pgexecutor.py -c home/pgexecutor/select_version.yml>> /home/pgexecutor/pgexecutor.log 2>&1";}
