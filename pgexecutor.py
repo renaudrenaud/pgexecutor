@@ -8,9 +8,8 @@ in order to be dockerized,
 it is using either or env var or the following command line.
 
 From command line:
-  python pgexecutor.py -d postgresql://user:password@localhost:5432/postgres -c /code/atlog/requests/req1.json
-or
-  python /home/renaud/code/AtlanticLog/python/pgexecutor.py -c /home/renaud/code/AtlanticLog/python/select_version.yml
+     python pgexecutor.py -c select_version.yml -d postgresql://postgres:postgres@172.17.0.1:5432/postgres
+
 
 env var are:
 PG_URI:         string, uri for database, ie postgresql://postgres:postgres@localhost:5432/postgres 
