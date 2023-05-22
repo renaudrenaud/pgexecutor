@@ -16,6 +16,9 @@ RUN git clone https://github.com/renaudrenaud/pgexecutor.git
 
 WORKDIR /home/pgexecutor
 
+EXPOSE 8123
+
 RUN python3 -m pip install -r requirements.txt
 
-CMD ["python3","pgexecutor.py"]
+# CMD ["python3","pgexecutor.py"]
+CMD ["python", "-m", "http.server", "8123"]
