@@ -212,7 +212,7 @@ class PGExecutor:
         print("trying to read yaml file " + filename)
         try:
             with open(filename, 'r') as f:
-                data = yaml.load(f)
+                data = yaml.load(f.read(), Loader=yaml.FullLoader)
                 print("found process: " + str(data['process']))
                 print("found subject: " + data['subject'])
                 self.process = data["process"]
