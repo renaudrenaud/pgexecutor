@@ -48,6 +48,8 @@ from pginterface import PG
 import os
 from sys import exit
 from datetime import datetime
+import pandas as pd
+from sqlalchemy import create_engine
 
 class PGExecutor:
     """
@@ -56,6 +58,13 @@ class PGExecutor:
         a list of servers from foreign data wrapper
         and execute the requests on the servers
 
+    v0.2.2: 2023-23-05 Excel and Json output
+        - add excel + json output
+        - also use sqlalchemy with pandas to write in excel
+
+    v0.2.1: 2023-22-05 
+        - use up to date syntax for yaml read
+        - remove simple cote to write in cron_process table
     v0.2.0: 2023-19-05 write on cron_table
     v0.1.0: 2023-18-05 1st version
     - read the yaml file and execute the commands accross postgresql, yes!
@@ -72,10 +81,11 @@ class PGExecutor:
             configFile:     string, path for config file, ie /home/renaud/code/atlog/python/requests/req1.json
 
         """
-        self.__version__ = '0.2.0'
+        self.__version__ = '0.2.2'
         self.myPG = None    # My Postgres class
         self.error = False
         self.configFile = configFile
+        self.databaseUri = databaseUri
 
         print("PG Executor version " + self.__version__ + " is starting ", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         try:
@@ -92,8 +102,17 @@ class PGExecutor:
         self.deadline = 0                       # deadline in days
         self.subject = "subject not found"      # subject of the job, ie "Update all FOREIGN DATA WRAPPERS"
         self.id = 0                             # id sequence of the process in the cron_process table
+        self.excel = None                      # if True, we write the result in an excel file
 
         self.message = None                     # message to write in the cron_process table
+    
+    def __del__(self):
+        """ 
+        end of the class 
+        """
+
+        print("PG Executor version " + self.__version__ + " is ending ", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        return None
     
     def clsExecute(self) -> None:
         """
@@ -139,23 +158,50 @@ class PGExecutor:
         execute a request with schema name, special ROMAIN request
         """
         # get the list of FDW schemas...
-        myResponse = self.myPG.clsSelect("SELECT srv_name FROM fdw_get_pg_foreign_servers_info()")
+        myResponse = self.myPG.clsSelect("SELECT srv_name FROM fdw_get_pg_foreign_servers_info() order by srv_name")
         fdw_servers = [myResponse[0] for myResponse in myResponse]
         reqCt = 0
+        dataframes = []
+        # create sqlAlchemy engine for pandas
+        engine = create_engine(self.databaseUri)
+
         for server in fdw_servers:
+            # for each server in the list of foreign servers
             reqCt += 1
-            print("------------- request schema: " + str(reqCt) + "/" + str(len(fdw_servers)), datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            print("- request schema " + server + ": " + str(reqCt) + "/" + str(len(fdw_servers)), datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             schemaRequest = request.replace("{schema}", server)
-            print(schemaRequest)
             # print(self.myPG.clsExecute(request))
-            myResponse = self.myPG.clsSelect(schemaRequest)
-            if len (myResponse) > 0:
-                self.__addMessage(myResponse[0][0])
-                print("response: ", myResponse[0][0])
+            if self.excel is not None:
+                # df = pd.read_sql(schemaRequest, self.myPG.conn)
+                df = pd.read_sql(schemaRequest, engine)
+                dataframes.append(df)
             else:
-                self.__addMessage("no result")
-                print("response: no result")
-            print("done at: ", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                myResponse = self.myPG.clsSelect(schemaRequest)
+                if len (myResponse) > 0:
+                    self.__addMessage(myResponse[0][0])
+                    # df = pd.DataFrame(myResponse[1:], columns=myResponse[0])
+                    df = pd.DataFrame(myResponse)
+                    dataframes.append(df)
+                    print("response: ", myResponse[0][0])
+                else:
+                    self.__addMessage("no result")
+                    print("response: no result")
+                print("done at: ", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        
+        # generate the excel file
+        combined_df = pd.concat(dataframes, ignore_index = True)
+        # json_content = dataframes.to_json(orient="records", path_or_buf=None)
+        
+        if self.excel is not False:
+            # write excel file name
+            combined_df.to_excel(self.excel, index=False)
+            json_data = combined_df.to_json(orient='records')
+
+            # write JSON file
+            jsonFile = os.path.splitext(self.excel)[0] + '.json'
+            with open(jsonFile, 'w') as file:
+                file.write(json_data)
+            
         return None
 
     def __addMessage(self, message) -> None:
@@ -177,6 +223,9 @@ class PGExecutor:
         write in the cron_process table
         
         """
+        if message is not None:
+            message = message.replace("'", "''")
+
         myReq = "select count(1) from cron_process where id = " + str(self.id)
         myResponse = self.myPG.clsSelect(myReq)
         if myResponse[0][0] == 0:
@@ -219,6 +268,18 @@ class PGExecutor:
                 self.documentation = data["documentation"]
                 self.deadline = data["deadline"]
                 self.subject = data["subject"]
+                try:
+                    self.excel = None
+                    excel = data["excel"]
+                    if excel is not None:
+                        filePath = os.path.dirname(excel)
+                        if os.path.exists(filePath):     
+                            self.excel = excel
+                            print("going to generate excel file: " + excel)
+                        else:
+                            print("No excel importation. Reason = path for excel file not found: " + filePath)
+                except:
+                    self.excel = None
 
 
         except Exception as e:
@@ -272,7 +333,7 @@ if __name__ == "__main__":
         defaultConfigFile = os.getenv("PG_CONFIG")
     if os.getenv("PG_URI") is None and os.getenv("PG_CONFIG") is None: 
         parser = argparse.ArgumentParser(description=description)
-        defaultConfigFile = "/home/renaud/code/AtlanticLog/python/select_version.yml"
+        defaultConfigFile = "/home/renaud/code/pgexecutor/schema_romain.yml"
         defaultURI = "postgresql://postgres:postgres@localhost:5432/postgres"
         parser.add_argument('-d','--databaseUri',type=str, help='database uri', default=defaultURI)
         parser.add_argument('-c', "--configFile", type=str, help='file configuration', default=defaultConfigFile)

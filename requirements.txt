@@ -1,2 +1,5 @@
 psycopg2-binary
 pyyaml
+pandas
+openpyxl
+sqlalchemy
