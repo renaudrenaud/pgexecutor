@@ -57,7 +57,8 @@ class PGExecutor:
         a list of requests
         a list of servers from foreign data wrapper
         and execute the requests on the servers
-
+  
+    V0.2.3: 2023-24-05 better management for env var (can specify only one)
     v0.2.2: 2023-23-05 Excel and Json output
         - add excel + json output
         - also use sqlalchemy with pandas to write in excel
@@ -325,16 +326,19 @@ if __name__ == "__main__":
     print("╩  ╚═╝────╚═╝╩ ╚═╚═╝╚═╝╚═╝ ╩ ╚═╝╩╚═")
 
     description = "Sql automation tool"
-
+    defaultURI = None
+    defaultConfigFile = None
     # select either or var env or command line
     if os.getenv("PG_URI") is not None:
         defaultURI = os.getenv("PG_URI")  
     if os.getenv("PG_CONFIG") is not None:
         defaultConfigFile = os.getenv("PG_CONFIG")
-    if os.getenv("PG_URI") is None and os.getenv("PG_CONFIG") is None: 
+    if os.getenv("PG_URI") is None or os.getenv("PG_CONFIG") is None: 
         parser = argparse.ArgumentParser(description=description)
-        defaultConfigFile = "/home/renaud/code/pgexecutor/schema_romain.yml"
-        defaultURI = "postgresql://postgres:postgres@localhost:5432/postgres"
+        if defaultConfigFile is None:
+            defaultConfigFile = "/home/renaud/code/pgexecutor/schema_romain.yml"
+        if defaultURI is None:
+            defaultURI = "postgresql://postgres:postgres@localhost:5432/postgres"
         parser.add_argument('-d','--databaseUri',type=str, help='database uri', default=defaultURI)
         parser.add_argument('-c', "--configFile", type=str, help='file configuration', default=defaultConfigFile)
         args = parser.parse_args()
