@@ -1,1 +1,3 @@
-* * * * * root python /home/pgexecutor/pgexecutor.py -c /home/pgexecutor/select_version.yml -d postgresql://postgres:outremer@172.17.0.1:5432/postgres >> /home/pgexporter/fichier_log.txt 2>&1
+*/1 * * * * export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ; python /home/pgexecutor/pgexecutor.py -c /home/pgexecutor/select_version.yml -d postgresql://postgres:outremer@172.17.0.1:5432/postgres > /root/fichier_log.txt 2> /root/fichier_log.log
+#*/1 * * * * echo "$PATH" > $HOME/crontest.txt 2> /root/crontest.log
+
