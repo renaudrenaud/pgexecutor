@@ -1,23 +1,28 @@
-----------------------------------------------------------------
+/*----------------------------------------------------------------
 TOC
 ----------------------------------------------------------------
-
+0 - Summary
 1 - Table creation
 2 - Function and trigger for 7 days limitation
 
 -----------------------------------------------------------------
 
+0 - Summary
 
+* Script table creation and function + trigger to manage a 7 days retention table
+* Please, when you drop for recreate, rerun the function and trigger script! 
+
+-----------------------------------------------------------------
 1 - Table creation
-
+*/
 -- DROP TABLE public.cron_process;
 
 CREATE TABLE public.cron_process (
 	id serial4 NOT NULL,
 	i_process int4 NULL,
 	s_platform varchar(100) NULL,
-	d_start timestamp NULL,
-	d_end timestamp NULL,
+	d_start timestamptz NULL,
+	d_end timestamptz NULL,
 	s_subject varchar(200) NULL,
 	s_message varchar(500) NULL,
 	s_deadline varchar(10) NULL,
@@ -25,11 +30,14 @@ CREATE TABLE public.cron_process (
 	CONSTRAINT cron_process_pkey PRIMARY KEY (id)
 );
 
+/*
 2 - Function and trigger for 7 days limitation
+*/
+
 CREATE OR REPLACE FUNCTION fdw_delete_old_records() RETURNS TRIGGER AS $$
 BEGIN
     DELETE FROM public.cron_process
-    WHERE d_start > NOW() + INTERVAL '7 days';
+    WHERE d_start < NOW() - INTERVAL '7 days';
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
